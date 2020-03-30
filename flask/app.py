@@ -339,6 +339,48 @@ def defender():
     res = [dict(zip(template, item)) for item in result]
     return json.dumps(res, ensure_ascii=False)
 
+# 公会重命名
+@app.route('/rename', methods=['GET', 'POST'])
+def rename():
+    if request.method == 'POST':
+        params = request.json
+        try:
+            db = connect()
+        except mysql.connector.Error as err:
+            print('连接数据库失败:{}'.format(err))
+        cursor = db.cursor()
+        try:
+            cursor.execute("update guild set name='{0}' where id={1}".format(params['name'], params['id']))
+            db.commit()
+            rowcount = cursor.rowcount
+        except mysql.connector.Error as err:
+            print('公会重命名失败:{}'.format(err))
+        finally:
+            cursor.close()
+            db.close()
+        return str(rowcount)
+    return ''
+    
+# 解散公会
+@app.route('/dismiss')
+def dismiss():
+    params = request.args
+    try:
+        db = connect()
+    except mysql.connector.Error as err:
+        print('连接数据库失败:{}'.format(err))
+    cursor = db.cursor()
+    try:
+        cursor.execute('delete from guild where id = {}'.format(params['id']))
+        db.commit()
+        rowcount = cursor.rowcount
+    except mysql.connector.Error as err:
+        print('解散公会失败:{}'.format(err))
+    finally:
+        cursor.close()
+        db.close()
+    return str(rowcount)
+
 if __name__ == '__main__':
     CORS(app, supports_credentials=True)
     #app.run(host='0.0.0.0')
